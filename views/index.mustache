@@ -1,24 +1,25 @@
 <h1>{{title}}</h1>
 <div id="login_box">
+<form action="login" method="post" name="login_form" id="login_form">
   <table>
     <tr>
       <td>登录名: </td>
       <td>
-        <input type="text" id="username"/>
+        <input type="text" name="username" id="username"/>
       </td>
       <td></td>
     </tr>
     <tr>
       <td>密码: </td>
       <td>
-        <input type="text" id="password"/>
+        <input type="text" name="password" id="password"/>
       </td>
       <td></td>
     </tr>
     <tr>
       <td>验证码: </td>
       <td>
-        <input type="text" id="rancode"/>
+        <input type="text" name="rancode" id="rancode"/>
       </td>
       <td>
         <img src="/passcode.jpg?0.1" alt="验证码" title="点击换一张" id="randcode"/>
@@ -32,4 +33,22 @@
       <td></td>
     </tr>
   </table>
+</form>
+</div>
+<!-- orderRequest.train_date=2012-01-13&orderRequest.from_station_telecode=OSQ&orderRequest.to_station_telecode=WCN&orderRequest.train_no=6500000T9607&trainPassType=QB&trainClass=QB%23D%23Z%23T%23K%23QT%23&includeStudent=00&seatTypeAndNum=&orderRequest.start_time_str=00%3A00--24%3A00 -->
+<div id="check_box" style="display: none;">
+	<form action="check" id="check_form" name="check_form">
+		<table>
+      <tr>
+      	<td>
+          <label for=""><input type="" name="orderRequest.from_station_telecode"/></label>
+        </td>
+      </tr>
+			<tr>
+				<td>
+          
+        </td>
+			</tr>
+		</table>
+	</form>
 </div>

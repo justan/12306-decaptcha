@@ -5,24 +5,24 @@ $(function(){
   $("#randcode").click(function(){
     this.src = this.src.replace(/0\.\d+$/, Math.random());
   });
-  $("#dologin").click(function(){
-    var un = $("#username").val(),
-      pw = $("#password").val(),
-      rc = $("#rancode").val();
+  
+  document.login_form.onsubmit = function(e){
     $.ajax('login', {
       type: "POST",
       data: {
-        un: un,
-        pw: pw,
-        rc: rc
+        username: $("#username").val(),
+        password: $("#password").val(),
+        rancode: $("#rancode").val()
       }
     }).done(function(ret){
       if(ret.login){
-        
+        $("#login_box").hide();
+        $("#check_box").show();
       }else{
         
       }
     });
-  });
+    return false;
+  };
 })
 })(jQuery);

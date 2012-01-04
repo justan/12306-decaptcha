@@ -10,35 +10,40 @@ module.exports = {
     res.render('index', { title: 'Express' })
   },
   login: function(req, res){
-    login(req, function(rs){
+    login(req, function(err, rs){
       var html = '';
-      rs.on('data', function(chunk){
-        html += chunk;
-      });
-      rs.on('end', function(){
-        var u_name = html.match(/var u_name = \'(.+)';/), ret = {},
-          reasonExp = [
-            /当前访问用户过多/, 
-            /请输入正确的验证码/,
-            /系统维护中/
-          ];
-        if(u_name){
-          ret.login = true;
-          ret.name = u_name[1];
-        }else{
-          ret.login = false;
-          ret.code = -1;
-          for(var i = 0, l = reasonExp.length; i < l; i++){
-            if(reasonExp[i].test(html)){
-              ret.code = i;
-              break;
+      if(err){
+        res.send(err, 503);
+      }else{
+        rs.on('data', function(chunk){
+          html += chunk;
+        });
+        rs.on('end', function(){
+          var u_name = html.match(/var u_name = \'(.+)';/), ret = {},
+            reasonExp = [
+              /当前访问用户过多/, 
+              /请输入正确的验证码/,
+              /系统维护中/
+            ];
+          if(u_name){
+            ret.login = true;
+            ret.name = u_name[1];
+          }else{
+            ret.login = false;
+            ret.code = -1;
+            for(var i = 0, l = reasonExp.length; i < l; i++){
+              if(reasonExp[i].test(html)){
+                ret.code = i;
+                ret.message = reasonExp[i].toString().replace(/(^\/|\/$)/g, '');
+                break;
+              }
             }
           }
-        }
-        res.send(ret);
-        console.log(html)
-      });
-      //rs.pipe(res);
+          res.send(ret);
+          //console.log(html)
+        });
+        //rs.pipe(res);
+      }
     });
   },
   rancode: function(req, res){
@@ -62,10 +67,13 @@ module.exports = {
       rs.pipe(res);
     });
     r.on('error', function(e){
-      res.send(e);
+      res.send(e, 503);
     });
     r.end();
     //console.log(r.output);
+  },
+  check: function(req, res){
+    
   },
   test: function(req, res){
     console.log(req.body);
@@ -75,8 +83,8 @@ module.exports = {
 var login = function(req, cb){
   cb = cb || function(){};
   var data = "loginUser.user_name=" + 
-    req.param('un') + "&nameErrorFocus=&user.password=" + req.param('pw') + 
-    "&passwordErrorFocus=&randCode=" + req.param('rc') + "&randErrorFocus=",
+    req.param('username') + "&nameErrorFocus=&user.password=" + req.param('password') + 
+    "&passwordErrorFocus=&randCode=" + req.param('rancode') + "&randErrorFocus=",
   r = https.request({
     host: 'dynamic.12306.cn',
     //host: 'localhost',
@@ -93,14 +101,10 @@ var login = function(req, cb){
     }
   }, function(res){
     res.setEncoding('utf8');
-    cb(res);
-    //console.log('STATUS: ' + res.statusCode);
-    //console.log('HEADERS: ' + JSON.stringify(res.headers));
-    //res.on('data', function (chunk) {
-      //console.log('BODY: ' + chunk);
-    //});
+    cb(undefined, res);
   });
   r.on('error', function(e){
+    cb(e)
     console.log(e);
   });
   r.write(data);
