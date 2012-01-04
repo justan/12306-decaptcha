@@ -1,5 +1,7 @@
 var https = require('https'),
-  http = require('http');
+  http = require('http'),
+  w = require('winston');
+  
 
 /*
  * GET home page.
@@ -40,7 +42,7 @@ module.exports = {
             }
           }
           res.send(ret);
-          //console.log(html)
+          w.silly(html)
         });
         //rs.pipe(res);
       }
@@ -68,15 +70,16 @@ module.exports = {
     });
     r.on('error', function(e){
       res.send(e, 503);
+      w.warn(e);
     });
     r.end();
-    //console.log(r.output);
+    w.silly(r.output);
   },
   check: function(req, res){
     
   },
   test: function(req, res){
-    console.log(req.body);
+    w.silly(req.body);
   }
 };
 
@@ -105,9 +108,9 @@ var login = function(req, cb){
   });
   r.on('error', function(e){
     cb(e)
-    console.log(e);
+    w.warn(e);
   });
   r.write(data);
   r.end();
-  console.log(r.output);  
+  w.silly(r.output);  
 };
