@@ -1,8 +1,10 @@
 var https = require('https'),
   http = require('http'),
   w = require('winston');
-  
 
+//w.setLevels(w.config.npm.levels);
+//w.addColors(w.config.npm.colors);
+w.add(w.transports.File, { filename: 'logs/w.log' });
 /*
  * GET home page.
  */
@@ -30,6 +32,7 @@ module.exports = {
           if(u_name){
             ret.login = true;
             ret.name = u_name[1];
+            req.session.username = ret.name;
           }else{
             ret.login = false;
             ret.code = -1;
@@ -51,10 +54,12 @@ module.exports = {
   rancode: function(req, res){
     var headers = {
       'User-Agent': req.header('User-Agent'),
-    }, cookie = req.header('Cookie');
-    if(cookie){
-      headers['Cookie'] = cookie;
-    }
+      'Referer': 'https://dynamic.12306.cn/otsweb/loginAction.do?method=init',
+      'Accept': 'image/png,image/*;q=0.8,*/*;q=0.5'
+    }, cookie = cookie_12306(req);
+    w.silly(req.cookies);
+    cookie && (headers['Cookie'] = cookie);
+    
     var r = https.request({
       method: 'GET',
       host: 'dynamic.12306.cn',
@@ -62,10 +67,16 @@ module.exports = {
       path: '/otsweb/passCodeAction.do?rand=lrand&' + Math.random(),
       headers: headers
     }, function(rs){
-      if(rs.headers['set-cookie'] && rs.headers['set-cookie'][0]){
-        rs.headers['set-cookie'][0] = rs.headers['set-cookie'][0].replace('Path=/otsweb', '');
-      }
-      rs.headers['set-cookie'] && res.header('Set-Cookie', rs.headers['set-cookie']);
+      var _jsessionid, _BIGipServerotsweb;
+      w.silly(rs.headers);
+      rs.headers['set-cookie'] && rs.headers['set-cookie'].forEach(function(item){
+        w.info(item);
+        var nr = /^(.+?)=/,
+          name = item.match(nr)[1],
+          val = item.replace(nr, '').replace(/;.*$/, '');
+        name && res.cookie(name, val);
+        w.info('name: ' + name + ', val: ' + val);
+      });
       rs.pipe(res);
     });
     r.on('error', function(e){
@@ -73,7 +84,7 @@ module.exports = {
       w.warn(e);
     });
     r.end();
-    w.silly(r.output);
+    w.log('debug', r.output);
   },
   check: function(req, res){
     
@@ -100,7 +111,7 @@ var login = function(req, cb){
       'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
       'Content-Length': data.length,
       'Referer': 'https://dynamic.12306.cn/otsweb/loginAction.do?method=init',
-      'Cookie': req.header('Cookie')
+      'Cookie': cookie_12306(req)
     }
   }, function(res){
     res.setEncoding('utf8');
@@ -112,5 +123,12 @@ var login = function(req, cb){
   });
   r.write(data);
   r.end();
-  w.silly(r.output);  
+  w.verbose(r.output);  
+},
+cookie_12306 = function(req){
+  var cookie;
+  if(req.cookies.jsessionid && req.cookies.bigipserverotsweb){
+    cookie = 'JSESSIONID=' + req.cookies.jsessionid + '; BIGipServerotsweb=' + req.cookies.bigipserverotsweb;
+  }
+  return cookie;
 };
