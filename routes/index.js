@@ -12,7 +12,11 @@ var MAX_AUTOLOGIN_RETRY = 100;
  
 module.exports = {
   index: function(req, res){
-    res.render('index', { title: 'Express', username: [req.session.username]});
+    var username = req.session.username;
+    res.render('index', { 
+      title: username || 'Express', 
+      islogin: !!username, 
+      username: username});
   },
   login: function(req, res){
     var retry_num = 0, cb = function(err, rs){
@@ -39,6 +43,7 @@ module.exports = {
             ret.login = true;
             ret.name = u_name[1];
             req.session.username = ret.name;
+            w.silly(ret.name + ', login')
           }else{
             ret.login = false;
             ret.code = -1;
@@ -55,7 +60,7 @@ module.exports = {
           }else{
             res.send(ret);
           }
-          ret.code == -1 && w.info(html);
+          ret.code == -1 && w.warn('unkonw html: ' + html);
         });
         //rs.pipe(res);
       }
@@ -103,7 +108,7 @@ module.exports = {
     w.silly(r.output);
   },
   check: function(req, res){
-    
+    res.send('lalala')
   },
   test: function(req, res){
     w.silly(req.body);

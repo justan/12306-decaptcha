@@ -35,8 +35,9 @@ app.configure('production', function(){
 
 app.get('/', routes.index);
 app.get('/passcode.jpg', routes.rancode);
+app.get('/check.html', routes.check);
+
 app.post('/login', routes.login);
-app.post('/check', routes.check);
 app.post('/test', routes.test);
 
 app.listen(3000);
