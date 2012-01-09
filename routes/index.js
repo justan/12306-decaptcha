@@ -8,16 +8,22 @@ w.add(w.transports.File, { filename: 'logs/w.log' });
 /*
  * GET home page.
  */
-
+var MAX_AUTOLOGIN_RETRY = 100;
+ 
 module.exports = {
   index: function(req, res){
-    res.render('index', { title: 'Express' })
+    res.render('index', { title: 'Express', username: [req.session.username]});
   },
   login: function(req, res){
-    login(req, function(err, rs){
+    var retry_num = 0, cb = function(err, rs){
       var html = '';
       if(err){
-        res.send(err, 503);
+        w.warn(err);
+        if(retry_num < MAX_AUTOLOGIN_RETRY && req.query.autoretry){
+          retry(err);
+        }else{
+          res.send(err, 503);
+        }
       }else{
         rs.on('data', function(chunk){
           html += chunk;
@@ -44,12 +50,22 @@ module.exports = {
               }
             }
           }
-          res.send(ret);
-          w.silly(html)
+          if(ret.code === 0 && retry_num < MAX_AUTOLOGIN_RETRY && req.query.autoretry){
+            retry();
+          }else{
+            res.send(ret);
+          }
+          ret.code == -1 && w.info(html);
         });
         //rs.pipe(res);
       }
-    });
+    }, 
+    retry = function(){
+      retry_num++;
+      w.info('retry num: ' + retry_num);
+      login(req, cb);
+    };
+    login(req, cb);
   },
   rancode: function(req, res){
     var headers = {
@@ -84,7 +100,7 @@ module.exports = {
       w.warn(e);
     });
     r.end();
-    w.log('debug', r.output);
+    w.silly(r.output);
   },
   check: function(req, res){
     

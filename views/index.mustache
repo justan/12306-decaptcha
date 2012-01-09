@@ -1,3 +1,27 @@
+{{#username}}
+<!-- orderRequest.train_date=2012-01-13&orderRequest.from_station_telecode=OSQ&orderRequest.to_station_telecode=WCN&orderRequest.train_no=6500000T9607&trainPassType=QB&trainClass=QB%23D%23Z%23T%23K%23QT%23&includeStudent=00&seatTypeAndNum=&orderRequest.start_time_str=00%3A00--24%3A00 -->
+<script type="text/javascript">
+  var __ISLOGIN__ = true;
+</script>
+<h1>{{.}}</h1>
+<div id="check_box" style="display: none;">
+	<form action="check" id="check_form" name="check_form">
+		<table>
+      <tr>
+      	<td>
+          <label for=""><input type="" name="orderRequest.from_station_telecode"/></label>
+        </td>
+      </tr>
+			<tr>
+				<td>
+          
+        </td>
+			</tr>
+		</table>
+	</form>
+</div>
+{{/username}}
+{{^username}}
 <h1>{{title}}</h1>
 <div id="login_box">
 <form action="login" method="post" name="login_form" id="login_form">
@@ -35,20 +59,4 @@
   </table>
 </form>
 </div>
-<!-- orderRequest.train_date=2012-01-13&orderRequest.from_station_telecode=OSQ&orderRequest.to_station_telecode=WCN&orderRequest.train_no=6500000T9607&trainPassType=QB&trainClass=QB%23D%23Z%23T%23K%23QT%23&includeStudent=00&seatTypeAndNum=&orderRequest.start_time_str=00%3A00--24%3A00 -->
-<div id="check_box" style="display: none;">
-	<form action="check" id="check_form" name="check_form">
-		<table>
-      <tr>
-      	<td>
-          <label for=""><input type="" name="orderRequest.from_station_telecode"/></label>
-        </td>
-      </tr>
-			<tr>
-				<td>
-          
-        </td>
-			</tr>
-		</table>
-	</form>
-</div>
+{{/username}}
