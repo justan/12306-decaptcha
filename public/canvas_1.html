@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+  <script type="text/javascript" src="javascripts/utils/underscore-min.js"></script>
+</head>
+<body>
+<canvas id="mycanvas" width="320" height="240"></canvas>
+<script type="text/javascript">
+var c, ctx, image;
+c = document.getElementById('mycanvas');
+ctx = c.getContext('2d');
+image = new Image();
+image.src = "passcode.jpg";
+image.onload = function(){
+  var x = 0, y = 0, w = image.width, h = image.height,
+    img, colors = {}, bl;
+  ctx.drawImage(image, x, y);
+  img = ctx.getImageData(x, y, w, h);
+  bl = blade(img);
+  bl.transform(1, 0,0.35, 1, 0, 0);
+  bl.grey(180);
+  //ctx.putImageData(bl, w, y);
+  document.body.appendChild(bl.canvas);
+};
+
+var blade = (function(){
+  var fn = function(img){
+    var _ctx;
+    this.canvas  = document.createElement('canvas');
+    this.canvas.width = img.width;
+    this.canvas.height = img.height;
+    _ctx = this.canvas.getContext('2d');
+    this.context = _ctx;
+    //_ctx.putImageData(img, 0, 0);
+    
+    this.sourceimage = img;
+    this.width = img.width;
+    this.height = img.height;
+    this.data = img.data;
+    this.rgba = [];
+    for(var i = 0, l = this.data.length; i < l; i += 4){
+      this.rgba[i/4] = [this.data[i], this.data[i + 1], this.data[i + 2], this.data[i + 3]];
+    }
+  };
+  fn.prototype={
+    grey: function(bindepth){
+      var d = this.sourceimage.data, c256;
+      for(var i = 0, l = d.length; i < l; i += 4){
+        c256 = grey(d[i], d[i + 1], d[i + 2]);
+        if(bindepth !== undefined){
+          c256 = c256 > bindepth ? 255 : 0
+        }
+        d[i] = d[i + 1] = d[i + 2] = c256;
+      }
+      this.context.putImageData(this.sourceimage, 0, 0)
+    },
+    //y: 变换的基准行
+    __transX: function(rate, y){
+      y = y || 0;
+      var d = this.rgba, data = this.data, d1 = [], offset, ret,
+        round = Math.round, blank = [255, 255, 255, 0];
+      for(var i = 0, h = this.height; i < h; i++){
+        offset = round(rate*(i - y));
+        var s = i*w;
+        console.log('x / ' + i + ': ' + offset);
+        for(var j = 0, w = this.width; j < w; j++){
+          var r = s + j, r4 = 4*r;
+          if(j + offset < 0 || j + offset >= w){
+            d[r] = blank;
+            data[r4] = data[r4 + 1] = data[r4 + 2] = blank[0];
+            data[r4 + 3] = 0;
+          }else{
+            var ro4 = (r + offset)*4;
+            if(offset >= 0){
+              d[r] = d[r + offset];
+              data[r4] = data[ro4];
+              data[r4 + 1] = data[ro4 + 1];
+              data[r4 + 2] = data[ro4 + 2];
+              data[r4 + 3] = data[ro4 + 3];
+            }else{
+              d[r + offset] = d[r];
+              data[ro4] = data[r4];
+              data[ro4 + 1] = data[r4 + 1];
+              data[ro4 + 2] = data[r4 + 2];
+              data[ro4 + 3] = data[r4 + 3];
+            }
+          }
+        }
+      }
+      //ret = ctx.createImageData(this.width + Math.abs(offset), this.height);
+      //return ret;
+      //this.width += Math.abs(offset);
+    },
+    transform: function(){
+      this.context.save();
+      this.context.clearRect(0, 0, this.width, this.height);
+      this.context.transform.apply(this.context, arguments);
+      //this.context.putImageData(this.img, 0, 0);
+      this.context.restore();
+    }
+  };
+  var grey = function(r, g, b){
+    var p = Math.pow;
+    return p((p(r, 2.2)*.2973 + p(g, 2.2)*.6274 + p(b, 2.2)*.0753), 1/2.2);
+  };
+  return function(img){return new fn(img);};
+})();
+</script>
+</body>
+</html>
