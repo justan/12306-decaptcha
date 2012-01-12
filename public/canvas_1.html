@@ -13,98 +13,93 @@ c = document.getElementById('mycanvas');
 ctx = c.getContext('2d');
 image = new Image();
 image.src = "passcode.jpg";
+
 image.onload = function(){
   var x = 0, y = 0, w = image.width, h = image.height,
     img, colors = {}, bl;
   ctx.drawImage(image, x, y);
   img = ctx.getImageData(x, y, w, h);
-  bl = blade(img);
-  bl.transform(1, 0,0.35, 1, 0, 0);
-  bl.grey(180);
-  //ctx.putImageData(bl, w, y);
-  document.body.appendChild(bl.canvas);
+  bl = blade(image);
+  bl.grey(160);
+  ctx.drawImage(bl.canvas, x, h);
+  bl.transform(1, 0, .32, 1, 0, 0);
+  ctx.drawImage(bl.canvas, x, 2*h);
+  bl.grey(0);
+  //ctx.drawImage(bl.canvas, x, h);
+  bl.binSplit();
 };
 
 var blade = (function(){
   var fn = function(img){
     var _ctx;
+    this.sourceImage = img;
     this.canvas  = document.createElement('canvas');
     this.canvas.width = img.width;
     this.canvas.height = img.height;
     _ctx = this.canvas.getContext('2d');
     this.context = _ctx;
-    //_ctx.putImageData(img, 0, 0);
-    
-    this.sourceimage = img;
-    this.width = img.width;
-    this.height = img.height;
-    this.data = img.data;
-    this.rgba = [];
-    for(var i = 0, l = this.data.length; i < l; i += 4){
-      this.rgba[i/4] = [this.data[i], this.data[i + 1], this.data[i + 2], this.data[i + 3]];
-    }
+    _ctx.drawImage(img, 0, 0);
   };
   fn.prototype={
     grey: function(bindepth){
-      var d = this.sourceimage.data, c256;
+      var img = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height), 
+      d = img.data, c256;
       for(var i = 0, l = d.length; i < l; i += 4){
         c256 = grey(d[i], d[i + 1], d[i + 2]);
         if(bindepth !== undefined){
-          c256 = c256 > bindepth ? 255 : 0
+          c256 = c256 > bindepth ? 255 : 0;
         }
         d[i] = d[i + 1] = d[i + 2] = c256;
       }
-      this.context.putImageData(this.sourceimage, 0, 0)
-    },
-    //y: 变换的基准行
-    __transX: function(rate, y){
-      y = y || 0;
-      var d = this.rgba, data = this.data, d1 = [], offset, ret,
-        round = Math.round, blank = [255, 255, 255, 0];
-      for(var i = 0, h = this.height; i < h; i++){
-        offset = round(rate*(i - y));
-        var s = i*w;
-        console.log('x / ' + i + ': ' + offset);
-        for(var j = 0, w = this.width; j < w; j++){
-          var r = s + j, r4 = 4*r;
-          if(j + offset < 0 || j + offset >= w){
-            d[r] = blank;
-            data[r4] = data[r4 + 1] = data[r4 + 2] = blank[0];
-            data[r4 + 3] = 0;
-          }else{
-            var ro4 = (r + offset)*4;
-            if(offset >= 0){
-              d[r] = d[r + offset];
-              data[r4] = data[ro4];
-              data[r4 + 1] = data[ro4 + 1];
-              data[r4 + 2] = data[ro4 + 2];
-              data[r4 + 3] = data[ro4 + 3];
-            }else{
-              d[r + offset] = d[r];
-              data[ro4] = data[r4];
-              data[ro4 + 1] = data[r4 + 1];
-              data[ro4 + 2] = data[r4 + 2];
-              data[ro4 + 3] = data[r4 + 3];
-            }
-          }
-        }
-      }
-      //ret = ctx.createImageData(this.width + Math.abs(offset), this.height);
-      //return ret;
-      //this.width += Math.abs(offset);
+      this.context.putImageData(img, 0, 0);
     },
     transform: function(){
+      var myc = canvasClone(this.canvas);
       this.context.save();
-      this.context.clearRect(0, 0, this.width, this.height);
-      this.context.transform.apply(this.context, arguments);
-      //this.context.putImageData(this.img, 0, 0);
-      this.context.restore();
+      this.canvas.width *= (1 + arguments[2]);
+      this.canvas.height *= (1 + arguments[1]);
+      this.context.fillStyle = "rgba(255, 255, 255, 0)";
+      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.context.setTransform.apply(this.context, arguments);
+      this.context.drawImage(myc, 0, 0);
+      //this.context.restore();
+    },
+    //分割黑白图像
+    binSplit: function(){
+      var image = this.canvas, w = image.width, h = image.height,
+        letters = [], start = 0, end = 0, pix, foundletter, inletter,
+        data = this.context.getImageData(0, 0, w, h).data;
+      for(var x = 0; x < w; x++){
+        for(var y = 0; y < h; y++){
+          pix = data[(y*w + x)*4];
+          if(pix === 0){
+            inletter = true;
+          }
+        }
+        if(!foundletter && inletter){
+          foundletter = true;
+          start = x;
+        }
+        if(foundletter && !inletter){
+          foundletter = false;
+          end = x;
+          letters.push([start, end]);
+        }
+        inletter = false;
+      }
+      console.log(letters);
     }
   };
   var grey = function(r, g, b){
     var p = Math.pow;
     return p((p(r, 2.2)*.2973 + p(g, 2.2)*.6274 + p(b, 2.2)*.0753), 1/2.2);
   };
+  var canvasClone = function(canvas, context){
+    var newcanvas = document.createElement("canvas").getContext(context || '2d');
+    newcanvas.drawImage(canvas, 0, 0);
+    return newcanvas.canvas;
+  };
+  var check
   return function(img){return new fn(img);};
 })();
 </script>
