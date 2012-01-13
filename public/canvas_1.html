@@ -8,7 +8,7 @@
 <body>
 <canvas id="mycanvas" width="320" height="240"></canvas>
 <script type="text/javascript">
-var c, ctx, image;
+var c, ctx, image, lw = JSON.parse(localStorage.width || '{}');
 c = document.getElementById('mycanvas');
 ctx = c.getContext('2d');
 image = new Image();
@@ -20,13 +20,18 @@ image.onload = function(){
   ctx.drawImage(image, x, y);
   img = ctx.getImageData(x, y, w, h);
   bl = blade(image);
-  bl.grey(160);
+  bl.transform(1, 0, .38, 1, 0, 0);
   ctx.drawImage(bl.canvas, x, h);
-  bl.transform(1, 0, .32, 1, 0, 0);
+  bl.grey(160);
   ctx.drawImage(bl.canvas, x, 2*h);
-  bl.grey(0);
   //ctx.drawImage(bl.canvas, x, h);
-  bl.binSplit();
+  var letters = bl.binSplit();
+  for(var i = 0, l = letters.length; i < l; i++){
+    var ll = letters[i][1] - letters[i][0], id = bl.context.getImageData(letters[i][0], 0, ll, h);
+    ctx.putImageData(id, 0, h * (3 + i));
+    lw[ll] = lw[ll] ? (lw[ll]+1) : 1; 
+  }
+  localStorage.width = JSON.stringify(lw);
 };
 
 var blade = (function(){
@@ -50,6 +55,7 @@ var blade = (function(){
           c256 = c256 > bindepth ? 255 : 0;
         }
         d[i] = d[i + 1] = d[i + 2] = c256;
+        //d[i + 3] = (c256 ? 0 : 255);
       }
       this.context.putImageData(img, 0, 0);
     },
@@ -58,8 +64,8 @@ var blade = (function(){
       this.context.save();
       this.canvas.width *= (1 + arguments[2]);
       this.canvas.height *= (1 + arguments[1]);
-      this.context.fillStyle = "rgba(255, 255, 255, 0)";
-      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.context.fillStyle = "rgba(255, 255, 255, 255)";
+      this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
       this.context.setTransform.apply(this.context, arguments);
       this.context.drawImage(myc, 0, 0);
       //this.context.restore();
@@ -68,7 +74,8 @@ var blade = (function(){
     binSplit: function(){
       var image = this.canvas, w = image.width, h = image.height,
         letters = [], start = 0, end = 0, pix, foundletter, inletter,
-        data = this.context.getImageData(0, 0, w, h).data;
+        img = this.context.getImageData(0, 0, w, h), 
+        data = img.data;
       for(var x = 0; x < w; x++){
         for(var y = 0; y < h; y++){
           pix = data[(y*w + x)*4];
@@ -88,6 +95,7 @@ var blade = (function(){
         inletter = false;
       }
       console.log(letters);
+      return letters;
     }
   };
   var grey = function(r, g, b){
@@ -99,9 +107,14 @@ var blade = (function(){
     newcanvas.drawImage(canvas, 0, 0);
     return newcanvas.canvas;
   };
-  var check
   return function(img){return new fn(img);};
 })();
+
+var trainWidths = function(widths){
+  _.each(widths, function(key, value){
+    
+  });
+};
 </script>
 </body>
 </html>
