@@ -101,8 +101,8 @@ module.exports = {
       rs.pipe(res);
     });
     r.on('error', function(e){
-      res.send(e, 503);
       w.warn(e);
+      res.end(e, 503);
     });
     r.end();
     w.silly(r.output);

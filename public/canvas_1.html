@@ -4,9 +4,14 @@
 	<meta charset="UTF-8">
 	<title></title>
   <script type="text/javascript" src="javascripts/utils/underscore-min.js"></script>
+  <script type="text/javascript" src="javascripts/utils/async.min.js"></script>
 </head>
 <body>
 <canvas id="mycanvas" width="320" height="240"></canvas>
+<!-- <button id="do" onclick="besmart()">
+  开始识别
+</button> -->
+</body>
 <script type="text/javascript">
 var c, ctx, image, lw = JSON.parse(localStorage.width || '{}');
 c = document.getElementById('mycanvas');
@@ -25,13 +30,21 @@ image.onload = function(){
   bl.grey(160);
   ctx.drawImage(bl.canvas, x, 2*h);
   //ctx.drawImage(bl.canvas, x, h);
-  var letters = bl.binSplit();
+  var letters = bl.binSplit(), imgs = [];
   for(var i = 0, l = letters.length; i < l; i++){
-    var ll = letters[i][1] - letters[i][0], id = bl.context.getImageData(letters[i][0], 0, ll, h);
+    var letter = letters[i],
+      ll = letter[1] - letter[0], hl = letter[3] - letter[2],
+      id = bl.context.getImageData(letter[0], letter[2], ll, hl);
     ctx.putImageData(id, 0, h * (3 + i));
+    imgs.push(id);
     lw[ll] = lw[ll] ? (lw[ll]+1) : 1; 
   }
+  imgs.forEach(function(imgdata){
+    document.body.appendChild(dataTocanvas(imgdata));
+  });
   localStorage.width = JSON.stringify(lw);
+  console.log('captcha loaded');
+  besmart(imgs)
 };
 
 var blade = (function(){
@@ -73,14 +86,28 @@ var blade = (function(){
     //分割黑白图像
     binSplit: function(){
       var image = this.canvas, w = image.width, h = image.height,
-        letters = [], start = 0, end = 0, pix, foundletter, inletter,
+        letters = [], start = 0, end = 0, pix, startY = h - 1, endY = 0,
+        foundletter, inletter, _inletter,
         img = this.context.getImageData(0, 0, w, h), 
-        data = img.data;
+        data = img.data,
+        min = Math.min, max = Math.max;
       for(var x = 0; x < w; x++){
         for(var y = 0; y < h; y++){
           pix = data[(y*w + x)*4];
           if(pix === 0){
             inletter = true;
+            if(!_inletter){
+              startY = min(startY, y);
+            }
+            if(y == h - 1){
+              endY = h;
+            }
+            _inletter = true;
+          }else{
+            if(_inletter){
+              endY = max(endY, y);
+            }
+            _inletter = false;
           }
         }
         if(!foundletter && inletter){
@@ -90,7 +117,8 @@ var blade = (function(){
         if(foundletter && !inletter){
           foundletter = false;
           end = x;
-          letters.push([start, end]);
+          letters.push([start, end, startY, endY]);
+          startY = h - 1, endY = 0;
         }
         inletter = false;
       }
@@ -102,19 +130,112 @@ var blade = (function(){
     var p = Math.pow;
     return p((p(r, 2.2)*.2973 + p(g, 2.2)*.6274 + p(b, 2.2)*.0753), 1/2.2);
   };
-  var canvasClone = function(canvas, context){
-    var newcanvas = document.createElement("canvas").getContext(context || '2d');
-    newcanvas.drawImage(canvas, 0, 0);
-    return newcanvas.canvas;
-  };
   return function(img){return new fn(img);};
 })();
+
+var dataTocanvas = function(imgdata){
+  var c = document.createElement("canvas"),
+  ct = c.getContext('2d');
+  c.width = imgdata.width;
+  c.height = imgdata.height;
+  ct.putImageData(imgdata, 0, 0);
+  return ct.canvas;
+},
+canvasClone = function(canvas){
+  var ct = document.createElement("canvas").getContext('2d');
+  ct.drawImage(canvas, 0, 0);
+  return ct.canvas;
+};
 
 var trainWidths = function(widths){
   _.each(widths, function(key, value){
     
   });
 };
+var init = function(imageset){
+  console.log('imageset loaded!')
+  init.imageset = imageset;
+  localStorage.imageset = JSON.stringify(imageset);
+};
+
+
+var VectorCompare = (function(){
+  var fn = function(){};
+  fn.prototype = {
+    magnitude: function(concordance){
+      var total = 0;
+      concordance.forEach(function(item, i){
+        total += item*item
+      });
+      return Math.sqrt(total)
+    },
+    relation: function(concordance1, concordance2){
+      var relevance = 0, topvalue = 0;
+      concordance1.forEach(function(item, i){
+        if(i in concordance2){
+          topvalue += item*concordance2[i];
+        }
+      });
+      return topvalue / (this.magnitude(concordance1) * this.magnitude(concordance2));
+    }
+  };
+  return fn;
+})();
+
+var v = new VectorCompare();
+
+function loadImageset(cb){
+  var iconset = ['2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','j','k','m','n','o','p','q','r','s','t','u','v','w','x','y','z'],
+  imageset = [],
+  img = {}, count = 0;
+  iconset.forEach(function(l){
+    img[l] = new Image();
+    img[l].src = 'iconset/' + l + '/0.png';
+    img[l].onload = function(){
+      var tmp = {};
+      tmp[l] = buildvector(canvasClone(img[l]).getContext('2d').getImageData(0, 0, img[l].width, img[l].height));
+      imageset.push(tmp);
+      count++;
+      if(count == iconset.length){
+        cb(imageset);
+      }
+    };
+    img[l].onerror = function(){
+      count++;
+      if(count == iconset.length){
+        cb(imageset);
+      }
+    };
+  });
+};
+
+var buildvector = function(imgdata){
+  var d1 = [], count = 0, d = imgdata.data;
+  for(var i = 0, l = d.length; i < l; i += 4){
+    d1[count] = d[i];
+    count++;
+  }
+  return d1;
+};
+
+var besmart = function(letters){
+  _guess = [];
+  letters.forEach(function(imgdata){
+    var guess = [];
+    init.imageset.forEach(function(img, i){
+      for(var key in img)
+      if(img){
+        guess.push([v.relation(img[key], buildvector(imgdata)), key]);
+      }
+    });
+   guess = guess.sort().reverse();
+    _guess.push(guess)
+    console.log(guess[0])
+  });
+  console.log('done')
+};
+
+
+localStorage.imageset ? (init.imageset = JSON.parse(localStorage.imageset)) : loadImageset(init);
 </script>
-</body>
 </html>
