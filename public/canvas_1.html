@@ -13,7 +13,8 @@
 </button> -->
 </body>
 <script type="text/javascript">
-var c, ctx, image, lw = JSON.parse(localStorage.width || '{}');
+var c, ctx, image, lw = JSON.parse(localStorage.width || '{}'),
+BG = "rgba(255, 255, 255, 255)";
 c = document.getElementById('mycanvas');
 ctx = c.getContext('2d');
 image = new Image();
@@ -35,6 +36,11 @@ image.onload = function(){
     var letter = letters[i],
       ll = letter[1] - letter[0], hl = letter[3] - letter[2],
       id = bl.context.getImageData(letter[0], letter[2], ll, hl);
+    if(letter[2] < 0){
+      for(var j = 0, m = -letter[2]*ll; j < m; j++){
+        id.data[j] = '255';
+      }
+    }
     ctx.putImageData(id, 0, h * (3 + i));
     imgs.push(id);
     lw[ll] = lw[ll] ? (lw[ll]+1) : 1; 
@@ -77,7 +83,7 @@ var blade = (function(){
       this.context.save();
       this.canvas.width *= (1 + arguments[2]);
       this.canvas.height *= (1 + arguments[1]);
-      this.context.fillStyle = "rgba(255, 255, 255, 255)";
+      this.context.fillStyle = BG;
       this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
       this.context.setTransform.apply(this.context, arguments);
       this.context.drawImage(myc, 0, 0);
@@ -86,7 +92,7 @@ var blade = (function(){
     //分割黑白图像
     binSplit: function(){
       var image = this.canvas, w = image.width, h = image.height,
-        letters = [], start = 0, end = 0, pix, startY = h - 1, endY = 0,
+        lettersPos = [], lettersData = [], start = 0, end = 0, pix, startY = h - 1, endY = 0,
         foundletter, inletter, _inletter,
         img = this.context.getImageData(0, 0, w, h), 
         data = img.data,
@@ -117,13 +123,23 @@ var blade = (function(){
         if(foundletter && !inletter){
           foundletter = false;
           end = x;
-          letters.push([start, end, startY, endY]);
+          //fix height
+          if(endY - startY < 14){
+            if(startY === 0){
+              startY = endY - 14;
+            }else if(endY === 0){
+              endY = startY + 14;
+            }
+          }
+          //fix height end
+          
+          lettersPos.push([start, end, startY, endY]);
           startY = h - 1, endY = 0;
         }
         inletter = false;
       }
-      console.log(letters);
-      return letters;
+      console.log(lettersPos);
+      return lettersPos;
     }
   };
   var grey = function(r, g, b){
@@ -194,7 +210,7 @@ function loadImageset(cb){
     img[l].onload = function(){
       var tmp = {};
       tmp[l] = buildvector(canvasClone(img[l]).getContext('2d').getImageData(0, 0, img[l].width, img[l].height));
-      imageset.push(tmp);
+      imageset.push([tmp]);
       count++;
       if(count == iconset.length){
         cb(imageset);
@@ -223,6 +239,7 @@ var besmart = function(letters){
   letters.forEach(function(imgdata){
     var guess = [];
     init.imageset.forEach(function(img, i){
+      img = img[0];
       for(var key in img)
       if(img){
         guess.push([v.relation(img[key], buildvector(imgdata)), key]);
