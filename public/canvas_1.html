@@ -5,10 +5,9 @@
 	<title></title>
   <script type="text/javascript" src="javascripts/utils/jquery-1.6.2.min.js"></script>
   <script type="text/javascript" src="javascripts/utils/underscore-min.js"></script>
-  <script type="text/javascript" src="javascripts/utils/async.min.js"></script>
 </head>
 <body>
-<canvas id="mycanvas" width="300" height="200"></canvas>
+<div id="captacha"></div>
 <button id="refresh" onclick="refresh()">
   换一组
 </button>
@@ -169,7 +168,8 @@ var VectorCompare = (function(){
 var v = new VectorCompare();
 
 function loadImageset(cb){
-  var iconset = ['2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','j','k','m','n','o','p','q','r','s','t','u','v','w','x','y','z'],
+  var iconset = ['2','3','4','5','6','7','8','9','a','b','c','d','e','f','g',
+    'h','j','k','m','n','o','p','q','r','s','t','u','v','w','x','y','z'],
   imageset = [],
   img = {}, count = 0;
   iconset.forEach(function(l){
@@ -214,16 +214,18 @@ var besmart = function(imgdata){
   return guess;
 };
 
-var refresh = function(){
+var refresh = function(isShow){
   var c, ctx, lw = JSON.parse(localStorage.width || '{}'),
     image = new Image();
     
-  c = document.getElementById('mycanvas');
+  //c = document.getElementById('mycanvas');
+  c = document.createElement('canvas');
   ctx = c.getContext('2d');
   
   image.src = "passcode.jpg?" + Date.now();
   console.log('loading');
   image.onload = function(){
+    isShow && $("#captacha").empty().append(image);
     console.log('captcha loaded');
     ctx.fillStyle = BG;
     ctx.fillRect(0, 0, c.width, c.height);
