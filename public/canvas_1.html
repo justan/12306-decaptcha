@@ -172,7 +172,7 @@ function loadImageset(cb){
     'h','j','k','m','n','o','p','q','r','s','t','u','v','w','x','y','z'],
   imageset = [],
   img = {}, count = 0;
-  iconset.forEach(function(l){
+  0 && iconset.forEach(function(l){
     img[l] = new Image();
     img[l].src = 'iconset/' + l + '/0.png';
     img[l].onload = function(){
@@ -190,6 +190,23 @@ function loadImageset(cb){
         cb(imageset);
       }
     };
+  });
+  
+  var n = 0, m = 0;
+  $.ajax('imageset').done(function(data){
+    _.each(data, function(letter, images){
+      _.each(images, function(fname){
+        n++;
+        $.ajax('iconset/' + letter + '/' + fname).done(function(){
+          m++;
+        }).always(function(){
+          m++;
+          if(m >= n){
+            cb(imageset);
+          }
+        });
+      });
+    });
   });
 };
 

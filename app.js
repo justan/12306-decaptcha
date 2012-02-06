@@ -40,5 +40,7 @@ app.get('/check.html', routes.check);
 app.post('/login', routes.login);
 app.post('/test', routes.test);
 
+app.get('/imageset', routes.imageset);
+
 app.listen(3000);
 console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
