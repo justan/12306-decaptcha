@@ -20,7 +20,8 @@
   </div>
 </div>
 <script type="text/javascript">
-var BG = "rgba(255, 255, 255, 255)";
+var BG = "rgba(255, 255, 255, 255)",
+  LETTER_HEIGHT = 14;
 
 var blade = (function(){
   var fn = function(img){
@@ -59,7 +60,7 @@ var blade = (function(){
       //this.context.restore();
     },
     //分割黑白图像
-    binSplit: function(){
+    binSplit: function(num){
       var image = this.canvas, w = image.width, h = image.height,
         lettersPos = [], lettersData = [], start = 0, end = 0, pix, startY = h - 1, endY = 0,
         foundletter, inletter, _inletter,
@@ -93,19 +94,24 @@ var blade = (function(){
           foundletter = false;
           end = x;
           //fix height
-          if(endY - startY < 14){
+          if(endY - startY < LETTER_HEIGHT){
             if(startY === 0){
-              startY = endY - 14;
+              startY = endY - LETTER_HEIGHT;
             }else if(endY === 0){
-              endY = startY + 14;
+              endY = startY + LETTER_HEIGHT;
             }
           }
           //fix height end
           
-          lettersPos.push([start, end, startY, endY]);
+          if(end - start >= 5){
+            lettersPos.push([start, end, startY, endY]);
+          }
           startY = h - 1, endY = 0;
         }
         inletter = false;
+      }
+      if(lettersPos.length < 4){
+        
       }
       console.log(lettersPos);
       return lettersPos;
@@ -132,11 +138,6 @@ canvasClone = function(canvas){
   return ct.canvas;
 };
 
-var trainWidths = function(widths){
-  _.each(widths, function(key, value){
-    
-  });
-};
 var init = function(imageset){
   console.log('imageset loaded!')
   init.imageset = imageset;
