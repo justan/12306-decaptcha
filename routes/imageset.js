@@ -5,22 +5,25 @@ var imageset = {},
     'h','j','k','m','n','o','p','q','r','s','t','u','v','w','x','y','z'];
   
 (function(){
+})();
+  
+module.exports = function(req, res, next){
+  var count = 0;
   iconset.forEach(function(letter){
     fs.readdir('public/iconset/' + letter, function(err, files){
       var i;
+      count++;
       if(err) console.log(err);
       if(files){
         i = files.indexOf('Thumbs.db');
-        console.log(letter + ': ' + files)
+        //console.log(letter + ': ' + files)
         if(i != -1){
           files.splice(i, 1);
         }
         imageset[letter] = files;
       }
+      count >= iconset.length && res.send(imageset);
     });
   });
-})();
-  
-module.exports = function(req, res, next){
-  res.send(imageset);
+
 };

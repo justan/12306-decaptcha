@@ -8,8 +8,11 @@
 </head>
 <body>
 <div id="captacha"></div>
-<button id="refresh" onclick="refresh()">
+<button id="refresh" onclick="refresh(true)">
   换一组
+</button>
+<button id="reset" onclick="localStorage.removeItem('imageset')">
+  重置样本
 </button>
 <div>
   识别结果: 
@@ -170,41 +173,31 @@ var v = new VectorCompare();
 function loadImageset(cb){
   var iconset = ['2','3','4','5','6','7','8','9','a','b','c','d','e','f','g',
     'h','j','k','m','n','o','p','q','r','s','t','u','v','w','x','y','z'],
-  imageset = [],
-  img = {}, count = 0;
-  0 && iconset.forEach(function(l){
-    img[l] = new Image();
-    img[l].src = 'iconset/' + l + '/0.png';
-    img[l].onload = function(){
-      var tmp = {};
-      tmp[l] = buildvector(canvasClone(img[l]).getContext('2d').getImageData(0, 0, img[l].width, img[l].height));
-      imageset.push([tmp]);
-      count++;
-      if(count == iconset.length){
-        cb(imageset);
-      }
-    };
-    img[l].onerror = function(){
-      count++;
-      if(count == iconset.length){
-        cb(imageset);
-      }
-    };
-  });
+  imageset = {};
   
   var n = 0, m = 0;
   $.ajax('imageset').done(function(data){
-    _.each(data, function(letter, images){
+    var checkend = function(n, m){
+      if(m >= n){
+        cb(imageset);
+      }
+    };
+    _.each(data, function(images, letter){
+      //img[letter] = [];
       _.each(images, function(fname){
+        var tmp = new Image();
+        tmp.src = 'iconset/' + letter + '/' + fname;
+        tmp.onload = function(){
+          imageset[letter] = imageset[letter] || [];
+          imageset[letter].push(buildvector(canvasClone(tmp).getContext('2d').getImageData(0, 0, tmp.width, tmp.height)));
+          m++;
+          checkend(n, m);
+        };
+        tmp.onerror = function(){
+          m++;
+          checkend(n, m);
+        };
         n++;
-        $.ajax('iconset/' + letter + '/' + fname).done(function(){
-          m++;
-        }).always(function(){
-          m++;
-          if(m >= n){
-            cb(imageset);
-          }
-        });
       });
     });
   });
@@ -220,12 +213,10 @@ var buildvector = function(imgdata){
 
 var besmart = function(imgdata){
   var guess = [];
-  init.imageset.forEach(function(img, i){
-    img = img[0];
-    for(var key in img)
-    if(img){
-      guess.push([v.relation(img[key], buildvector(imgdata)), key]);
-    }
+  _.each(init.imageset, function(imgs, letter){
+    _.each(imgs, function(img, i){
+      guess.push([v.relation(img, buildvector(imgdata)), letter]);
+    });
   });
   guess = guess.sort().reverse();
   return guess;
@@ -273,15 +264,19 @@ var refresh = function(isShow){
     }
     var $res = $("#result");
     $res.empty();
-    imgs.forEach(function(imgdata){
+    refresh.result = [];
+    imgs.forEach(function(imgdata, i){
       var result = besmart(imgdata);
+      refresh.result.push(result);
       console.log(result[0]);
-      $res.append($('<div><span>' + result[0][1].toUpperCase() + '</span><span class="detail" title="详细">+</span></div>').prepend(dataTocanvas(imgdata)));
+      $res.append($('<div><span>' + result[0][1].toUpperCase() + ', ' + result[0][0] + '</span><span class="detail" onclick="detail(' + i + ')" title="详细">+</span></div>').prepend(dataTocanvas(imgdata)));
     });
     localStorage.width = JSON.stringify(lw);
   };
 };
-
+function detail(i){
+  console.log(refresh.result[i]);
+}
 
 localStorage.imageset ? (init.imageset = JSON.parse(localStorage.imageset)) : loadImageset(init);
 refresh();
