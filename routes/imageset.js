@@ -7,23 +7,27 @@ var imageset = {},
 (function(){
 })();
   
-module.exports = function(req, res, next){
-  var count = 0;
-  iconset.forEach(function(letter){
-    fs.readdir('public/iconset/' + letter, function(err, files){
-      var i;
-      count++;
-      if(err) console.log(err);
-      if(files){
-        i = files.indexOf('Thumbs.db');
-        //console.log(letter + ': ' + files)
-        if(i != -1){
-          files.splice(i, 1);
+module.exports = {
+  trainset: function(req, res){
+    var count = 0;
+    iconset.forEach(function(letter){
+      fs.readdir('public/iconset/' + letter, function(err, files){
+        var i;
+        count++;
+        if(err) console.log(err);
+        if(files){
+          i = files.indexOf('Thumbs.db');
+          //console.log(letter + ': ' + files)
+          if(i != -1){
+            files.splice(i, 1);
+          }
+          imageset[letter] = files;
         }
-        imageset[letter] = files;
-      }
-      count >= iconset.length && res.send(imageset);
+        count >= iconset.length && res.send(imageset);
+      });
     });
-  });
-
+  },
+  imageset: function(req, res){
+    
+  }
 };

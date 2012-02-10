@@ -5,6 +5,7 @@
 	<title></title>
   <script type="text/javascript" src="javascripts/utils/jquery-1.6.2.min.js"></script>
   <script type="text/javascript" src="javascripts/utils/underscore-min.js"></script>
+  <script type="text/javascript" src="crack.js"></script>
 </head>
 <body>
 <div id="captacha"></div>
@@ -20,167 +21,20 @@
   </div>
 </div>
 <script type="text/javascript">
-var BG = "rgba(255, 255, 255, 255)",
-  LETTER_HEIGHT = 14;
-
-var blade = (function(){
-  var fn = function(img){
-    var _ctx;
-    this.sourceImage = img;
-    this.canvas  = document.createElement('canvas');
-    this.canvas.width = img.width;
-    this.canvas.height = img.height;
-    _ctx = this.canvas.getContext('2d');
-    this.context = _ctx;
-    _ctx.drawImage(img, 0, 0);
-  };
-  fn.prototype={
-    grey: function(bindepth){
-      var img = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height), 
-      d = img.data, c256;
-      for(var i = 0, l = d.length; i < l; i += 4){
-        c256 = grey(d[i], d[i + 1], d[i + 2]);
-        if(bindepth !== undefined){
-          c256 = c256 > bindepth ? 255 : 0;
-        }
-        d[i] = d[i + 1] = d[i + 2] = c256;
-        //d[i + 3] = (c256 ? 0 : 255);
-      }
-      this.context.putImageData(img, 0, 0);
-    },
-    transform: function(){
-      var myc = canvasClone(this.canvas);
-      this.context.save();
-      this.canvas.width *= (1 + arguments[2]);
-      this.canvas.height *= (1 + arguments[1]);
-      this.context.fillStyle = BG;
-      this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
-      this.context.setTransform.apply(this.context, arguments);
-      this.context.drawImage(myc, 0, 0);
-      //this.context.restore();
-    },
-    //分割黑白图像
-    binSplit: function(num){
-      var image = this.canvas, w = image.width, h = image.height,
-        lettersPos = [], lettersData = [], start = 0, end = 0, pix, startY = h - 1, endY = 0,
-        foundletter, inletter, _inletter,
-        img = this.context.getImageData(0, 0, w, h), 
-        data = img.data,
-        min = Math.min, max = Math.max;
-      for(var x = 0; x < w; x++){
-        for(var y = 0; y < h; y++){
-          pix = data[(y*w + x)*4];
-          if(pix === 0){
-            inletter = true;
-            if(!_inletter){
-              startY = min(startY, y);
-            }
-            if(y == h - 1){
-              endY = h;
-            }
-            _inletter = true;
-          }else{
-            if(_inletter){
-              endY = max(endY, y);
-            }
-            _inletter = false;
-          }
-        }
-        if(!foundletter && inletter){
-          foundletter = true;
-          start = x;
-        }
-        if(foundletter && !inletter){
-          foundletter = false;
-          end = x;
-          //fix height
-          if(endY - startY < LETTER_HEIGHT){
-            if(startY === 0){
-              startY = endY - LETTER_HEIGHT;
-            }else if(endY === 0){
-              endY = startY + LETTER_HEIGHT;
-            }
-          }
-          //fix height end
-          
-          if(end - start >= 5){
-            lettersPos.push([start, end, startY, endY]);
-          }
-          startY = h - 1, endY = 0;
-        }
-        inletter = false;
-      }
-      if(lettersPos.length < 4){
-        
-      }
-      console.log(lettersPos);
-      return lettersPos;
-    }
-  };
-  var grey = function(r, g, b){
-    var p = Math.pow;
-    return p((p(r, 2.2)*.2973 + p(g, 2.2)*.6274 + p(b, 2.2)*.0753), 1/2.2);
-  };
-  return function(img){return new fn(img);};
-})();
-
-var dataTocanvas = function(imgdata){
-  var c = document.createElement("canvas"),
-  ct = c.getContext('2d');
-  c.width = imgdata.width;
-  c.height = imgdata.height;
-  ct.putImageData(imgdata, 0, 0);
-  return ct.canvas;
-},
-canvasClone = function(canvas){
-  var ct = document.createElement("canvas").getContext('2d');
-  ct.drawImage(canvas, 0, 0);
-  return ct.canvas;
-};
-
 var init = function(imageset){
   console.log('imageset loaded!')
   init.imageset = imageset;
   localStorage.imageset = JSON.stringify(imageset);
 };
 
-
-var VectorCompare = (function(){
-  var fn = function(){};
-  fn.prototype = {
-    magnitude: function(concordance){
-      var total = 0;
-      concordance.data.forEach(function(item, i){
-        var x = i % concordance.width, y = Math.floor(i/concordance.width)
-        total += Math.pow(item*(Math.pow(x*x + y*y, 1/2)), 2);
-      });
-      return Math.sqrt(total)
-    },
-    relation: function(concordance1, concordance2){
-      var relevance = 0, topvalue = 0;
-      for(var i = 0, w = Math.min(concordance1.width, concordance2.width); i < w; i++){
-        for(var j = 0, h = Math.min(concordance1.height, concordance2.height); j < h; j++){
-          topvalue += concordance1.data[j*concordance1.width + i]*concordance2.data[j*concordance2.width + i]*(i*i + j*j);
-        }
-      }
-      return topvalue / (this.magnitude(concordance1) * this.magnitude(concordance2));
-    }
-  };
-  return fn;
-})();
-
-var v = new VectorCompare();
-
 function loadImageset(cb){
-  var iconset = ['2','3','4','5','6','7','8','9','a','b','c','d','e','f','g',
-    'h','j','k','m','n','o','p','q','r','s','t','u','v','w','x','y','z'],
-  imageset = {};
+  var imageset = {};
   
   var n = 0, m = 0;
-  $.ajax('imageset').done(function(data){
+  $.ajax('trainset').done(function(data){
     var checkend = function(n, m){
       if(m >= n){
-        cb(imageset);
+        cb(decaptcha.vectorSet(imageset));
       }
     };
     _.each(data, function(images, letter){
@@ -190,7 +44,7 @@ function loadImageset(cb){
         tmp.src = 'iconset/' + letter + '/' + fname;
         tmp.onload = function(){
           imageset[letter] = imageset[letter] || [];
-          imageset[letter].push(buildvector(canvasClone(tmp).getContext('2d').getImageData(0, 0, tmp.width, tmp.height)));
+          imageset[letter].push(tmp);
           m++;
           checkend(n, m);
         };
@@ -204,75 +58,18 @@ function loadImageset(cb){
   });
 };
 
-var buildvector = function(imgdata){
-  var d1 = [], d = imgdata.data;
-  for(var i = 0, l = d.length; i < l; i += 4){
-    d1.push(d[i]);
-  }
-  return {data: d1, width: imgdata.width, height: imgdata.height};
-};
-
-var besmart = function(imgdata){
-  var guess = [];
-  _.each(init.imageset, function(imgs, letter){
-    _.each(imgs, function(img, i){
-      guess.push([v.relation(img, buildvector(imgdata)), letter]);
-    });
-  });
-  guess = guess.sort().reverse();
-  return guess;
-};
-
 var refresh = function(isShow){
-  var c, ctx, lw = JSON.parse(localStorage.width || '{}'),
-    image = new Image();
-    
-  //c = document.getElementById('mycanvas');
-  c = document.createElement('canvas');
-  ctx = c.getContext('2d');
-  
+  var image = new Image();
   image.src = "passcode.jpg?" + Date.now();
   console.log('loading');
   image.onload = function(){
     isShow && $("#captacha").empty().append(image);
-    console.log('captcha loaded');
-    ctx.fillStyle = BG;
-    ctx.fillRect(0, 0, c.width, c.height);
-      
-    var x = 0, y = 0, w = image.width, h = image.height,
-      img, colors = {}, bl;
-    ctx.drawImage(image, x, y);
-    img = ctx.getImageData(x, y, w, h);
-    bl = blade(image);
-    bl.transform(1, 0, .38, 1, 0, 0);
-    ctx.drawImage(bl.canvas, x, h);
-    bl.grey(160);
-    ctx.drawImage(bl.canvas, x, 2*h);
-    //ctx.drawImage(bl.canvas, x, h);
-    var letters = bl.binSplit(), imgs = [];
-    for(var i = 0, l = letters.length; i < l; i++){
-      var letter = letters[i],
-        ll = letter[1] - letter[0], hl = letter[3] - letter[2],
-        id = bl.context.getImageData(letter[0], letter[2], ll, hl);
-      if(letter[2] < 0){
-        for(var j = 0, m = -letter[2]*ll; j < m; j++){
-          id.data[j] = '255';
-        }
-      }
-      ctx.putImageData(id, 0, h * (3 + i));
-      imgs.push(id);
-      lw[ll] = lw[ll] ? (lw[ll]+1) : 1; 
-    }
-    var $res = $("#result");
-    $res.empty();
-    refresh.result = [];
-    imgs.forEach(function(imgdata, i){
-      var result = besmart(imgdata);
-      refresh.result.push(result);
+    var $res = $("#result").empty();  
+    var results = decaptcha.recognizer(image, init.imageset);
+    _.each(results.result, function(result, i){
       console.log(result[0]);
-      $res.append($('<div><span>' + result[0][1].toUpperCase() + ', ' + result[0][0] + '</span><span class="detail" onclick="detail(' + i + ')" title="详细">+</span></div>').prepend(dataTocanvas(imgdata)));
+      $res.append($('<div><span>' + result[0][1].toUpperCase() + ', ' + result[0][0] + '</span></div>').prepend(results.imgData[i]));
     });
-    localStorage.width = JSON.stringify(lw);
   };
 };
 function detail(i){

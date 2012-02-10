@@ -5,7 +5,8 @@
 
 var express = require('express')
   , routes = require('./routes')
-  , stache = require('stache');
+  , stache = require('stache')
+  , imageset = require('./routes/imageset');
 
 var app = module.exports = express.createServer();
 
@@ -40,7 +41,8 @@ app.get('/check.html', routes.check);
 app.post('/login', routes.login);
 app.post('/test', routes.test);
 
-app.get('/imageset', routes.imageset);
+app.get('/trainset', imageset.trainset);
+app.all('/imageset', imageset.imageset);
 
 app.listen(3000);
 console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);

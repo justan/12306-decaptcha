@@ -2,8 +2,6 @@ var https = require('https'),
   http = require('http'),
   w = require('winston');
   
-var imageset = require('./imageset');
-
 //w.setLevels(w.config.npm.levels);
 //w.addColors(w.config.npm.colors);
 w.add(w.transports.File, { filename: 'logs/w.log' });
@@ -114,8 +112,7 @@ module.exports = {
   },
   test: function(req, res){
     w.silly(req.body);
-  },
-  imageset: imageset
+  }
 };
 
 var login = function(req, cb){
