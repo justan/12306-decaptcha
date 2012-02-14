@@ -35,7 +35,14 @@ $('#gen').click(function(){
   });
 });
 $('#save').click(function(){
-  localStorage.vectorData = JSON.stringify(vectorData);
+  var data;
+  if(vectorData){
+    data = JSON.stringify(vectorData);
+    localStorage.vectorData = data;
+    $.ajax('imageset', {type: 'PUT', data: {data: data}}).done(function(){
+      
+    });
+  }
 });
 $("#refresh").click(function(){
   refresh(true);

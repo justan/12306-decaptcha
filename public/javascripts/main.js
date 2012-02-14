@@ -2,6 +2,12 @@
 
 $(function(){
   var vectorData = JSON.parse(localStorage.vectorData);
+  if(!vectorData){
+    $.ajax('imageset').done(function(data){
+      vectorData = data;
+      localStorage.vectorData = JSON.stringify(data);
+    });
+  }
   function passcode(callback){
     var img = new Image();
     img.src = "passcode.jpg?" + Date.now();

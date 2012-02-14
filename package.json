@@ -7,5 +7,7 @@
     , "jade": ">= 0.0.1"
     , "stache": "*"
     , "winston": ">= 0.2"
+    , "canvas": "*"
+    , "underscore": ">= 1.0"
   }
 }
