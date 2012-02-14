@@ -5,6 +5,8 @@
 {{>check_rest}}
 {{/islogin}}
 {{^islogin}}
+<script type="text/javascript" src="javascripts/utils/underscore-min.js"></script>
+<script type="text/javascript" src="crack.js"></script>
 <h1>{{title}}</h1>
 <div id="login_box">
 <form action="login" method="post" name="login_form" id="login_form">
@@ -22,15 +24,6 @@
         <input type="text" name="password" id="password"/>
       </td>
       <td></td>
-    </tr>
-    <tr>
-      <td>验证码: </td>
-      <td>
-        <input type="text" name="rancode" id="rancode"/>
-      </td>
-      <td>
-        <img alt="验证码" title="点击换一张" id="randcode"/>
-      </td>
     </tr>
     <tr>
       <td>

@@ -9,23 +9,37 @@
 </head>
 <body>
 <div id="captacha"></div>
-<button id="refresh" onclick="refresh(true)">
+<button id="refresh">
   换一组
 </button>
 <button id="reset" onclick="localStorage.removeItem('imageset')">
   重置样本
 </button>
+<div class="train">
+  <button id="gen">
+    生成样品矢量集
+  </button>
+  <button id="save">保存</button>
+</div>
 <div>
   识别结果: 
   <div id="result">
   </div>
 </div>
 <script type="text/javascript">
-var init = function(imageset){
-  console.log('imageset loaded!')
-  init.imageset = imageset;
-  localStorage.imageset = JSON.stringify(imageset);
-};
+$(function(){
+var vectorData = JSON.parse(localStorage.vectorData);
+$('#gen').click(function(){
+  loadImageset(function(data){
+    vectorData = data;
+  });
+});
+$('#save').click(function(){
+  localStorage.vectorData = JSON.stringify(vectorData);
+});
+$("#refresh").click(function(){
+  refresh(true);
+});
 
 function loadImageset(cb){
   var imageset = {};
@@ -65,7 +79,7 @@ var refresh = function(isShow){
   image.onload = function(){
     isShow && $("#captacha").empty().append(image);
     var $res = $("#result").empty();  
-    var results = decaptcha.recognizer(image, init.imageset);
+    var results = decaptcha.recognizer(image, vectorData);
     _.each(results.result, function(result, i){
       console.log(result[0]);
       $res.append($('<div><span>' + result[0][1].toUpperCase() + ', ' + result[0][0] + '</span></div>').prepend(results.imgData[i]));
@@ -76,7 +90,7 @@ function detail(i){
   console.log(refresh.result[i]);
 }
 
-localStorage.imageset ? (init.imageset = JSON.parse(localStorage.imageset)) : loadImageset(init);
-refresh();
+vectorData && refresh();
+});
 </script>
 </html>

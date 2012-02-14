@@ -10,6 +10,7 @@ var BG = "rgba(255, 255, 255, 255)",
 var Canvas;
 if(typeof module !== "undefined" && module.exports){
   Canvas = require('canvas');
+  _ = require('underscore');
   inNODE = true;
 }else{
   Canvas = function(width, height){
@@ -171,6 +172,7 @@ recognizer = function(img, trainset){
   });
   return {result: result, imgData: imgs};
 },
+//根据图片集生成矢量数据集
 vectorSet = function(imgSet){
   var vSet = {};
   _.each(imgSet, function(imgs, letter){

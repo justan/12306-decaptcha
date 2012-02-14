@@ -98,6 +98,7 @@ module.exports = {
         name && res.cookie(name, val);
         w.info('name: ' + name + ', val: ' + val);
       });
+      res.header('Content-Type', 'image/jpeg');
       rs.pipe(res);
     });
     r.on('error', function(e){
