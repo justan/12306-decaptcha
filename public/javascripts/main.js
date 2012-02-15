@@ -1,7 +1,7 @@
 (function($){
 
 $(function(){
-  var vectorData = JSON.parse(localStorage.vectorData);
+  var vectorData = localStorage.vectorData && JSON.parse(localStorage.vectorData);
   if(!vectorData){
     $.ajax('imageset').done(function(data){
       vectorData = data;
