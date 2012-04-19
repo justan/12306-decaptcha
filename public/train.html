@@ -87,7 +87,7 @@ var refresh = function(isShow){
     isShow && $("#captacha").empty().append(image);
     var $res = $("#result").empty();  
     var results = decaptcha.recognizer(image, vectorData);
-    _.each(results.result, function(result, i){
+    _.each(results.detail, function(result, i){
       console.log(result[0]);
       $res.append($('<div><span>' + result[0][1].toUpperCase() + ', ' + result[0][0] + '</span></div>').prepend(results.imgData[i]));
     });
