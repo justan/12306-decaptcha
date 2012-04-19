@@ -54,7 +54,8 @@ module.exports = {
         buffer = new Buffer(fstat.size);
         fs.read(fd, buffer, 0, fstat.size, 0, function(err, some){
           if(err){ next(err) }else{
-            res.header('Content-Type', 'application/json; charset=UTF-8')
+            res.header('Content-Type', 'application/json; charset=UTF-8');
+            res.header('access-control-allow-origin', '*');
             res.send(buffer);
           }
         });

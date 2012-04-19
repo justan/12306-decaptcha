@@ -12,11 +12,8 @@ $(function(){
     var img = new Image();
     img.src = "passcode.jpg?" + Date.now();
     img.onload = function(){
-      var results = decaptcha.recognizer(img, vectorData), res = [];
-      results.result.length == 4 ? _.each(results.result, function(result, i){
-        res.push(result[0][1])
-        res.length == 4 && callback(res.join(''));
-      }) : passcode(callback);
+      var results = decaptcha.recognizer(img, vectorData);
+      results.result.length == 4 ? callback(results.result.join('')) : passcode(callback);
     };
   }
   function login(){

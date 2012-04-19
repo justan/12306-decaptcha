@@ -10,7 +10,6 @@ var BG = "rgba(255, 255, 255, 255)",
 var Canvas;
 if(typeof module !== "undefined" && module.exports){
   Canvas = require('canvas');
-  _ = require('underscore');
   inNODE = true;
 }else{
   Canvas = function(width, height){
@@ -146,17 +145,23 @@ buildvector = function(imgdata){
 },
 besmart = function(imgdata, trainset){
   var guess = [];
-  _.each(trainset, function(imgs, letter){
-    _.each(imgs, function(img, i){
+  $.each(trainset, function(letter, imgs){
+    $.each(imgs, function(i, img){
       guess.push([v.relation(img, buildvector(imgdata)), letter]);
     });
   });
   guess = guess.sort().reverse();
   return guess;
 },
+/**
+ * 验证码识别主要方法
+ * @param {Object} img 验证码图片对象
+ * @param {Object} trainset 验证数据集合
+ * @return {Object} detail: 详细的结果参数, result: 最为可能的结果
+ */
 recognizer = function(img, trainset){
   var w = img.width, h = img.height, 
-    ctx = new Canvas(w, h).getContext('2d'), imageData, bl, result = [], imgs = [];
+    ctx = new Canvas(w, h).getContext('2d'), imageData, bl, result = [], imgs = [], detail = [];
   ctx.fillStyle = BG;
   ctx.fillRect(0, 0, w, h);
   ctx.drawImage(img, 0, 0);
@@ -167,16 +172,18 @@ recognizer = function(img, trainset){
   bl.grey(160);
   
   bl.binSplit().forEach(function(imgData, i){
-    result.push(besmart(imgData, trainset));
+    var res = besmart(imgData, trainset);
+    detail.push(res);
+    result.push(res[0][1]);
     imgs.push(dataTocanvas(imgData));
   });
-  return {result: result, imgData: imgs};
+  return {detail: detail, imgData: imgs, result: result};
 },
 //根据图片集生成矢量数据集
 vectorSet = function(imgSet){
   var vSet = {};
-  _.each(imgSet, function(imgs, letter){
-    _.each(imgs, function(img){
+  $.each(imgSet, function(letter, imgs){
+    imgs.forEach(function(img){
       vSet[letter] = vSet[letter] || [];
       vSet[letter].push(buildvector(canvasClone(img).getContext('2d').getImageData(0, 0, img.width, img.height)));
     });
@@ -195,6 +202,10 @@ var VectorCompare = (function(){
       });
       return Math.sqrt(total)
     },
+    /**
+     * 检测矢量相关率
+     * @return {Number} 相关率
+     */
     relation: function(concordance1, concordance2){
       var relevance = 0, topvalue = 0;
       for(var i = 0, w = Math.min(concordance1.width, concordance2.width); i < w; i++){
