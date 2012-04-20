@@ -1,4 +1,6 @@
-//require('underscore');
+/**
+ * 12306 验证码识别
+ */
 
 var decaptcha = (typeof module !== "undefined" && module.exports) || {};
 
@@ -6,7 +8,10 @@ var decaptcha = (typeof module !== "undefined" && module.exports) || {};
 var inNODE;
 
 var BG = "rgba(255, 255, 255, 255)",
-  LETTER_HEIGHT = 14;
+  LETTER_HEIGHT = 14, //字母高度
+  TRANSFORM_RATE = [1, 0, .38, 1, 0, 0], //变形
+  GREY = 160; //背景分离灰度
+
 var Canvas;
 if(typeof module !== "undefined" && module.exports){
   Canvas = require('canvas');
@@ -20,14 +25,13 @@ if(typeof module !== "undefined" && module.exports){
   };
   inNODE = false;
 }
-var blade = function(){
-  var fn = function(imgData){
-    var ctx;
-    this.sourceImage = imgData;
-    this.canvas  = new Canvas(imgData.width, imgData.height);
-    ctx = this.canvas.getContext('2d');
-    this.context = ctx;
-    ctx.drawImage(imgData, 0, 0);
+/**
+ * 处理验证码
+ */
+var Blade = function(){
+  var fn = function(canvas){
+    this.canvas  = canvasClone(canvas);
+    this.context = this.canvas.getContext('2d');
   };
   fn.prototype = {
     grey: function(bindepth){
@@ -41,7 +45,9 @@ var blade = function(){
         d[i] = d[i + 1] = d[i + 2] = c256;
       }
       this.context.putImageData(img, 0, 0);
+      return this;
     },
+    
     transform: function(){
       var myc = canvasClone(this.canvas);
       this.context.save();
@@ -52,8 +58,12 @@ var blade = function(){
       this.context.setTransform.apply(this.context, arguments);
       this.context.drawImage(myc, 0, 0);
       //this.context.restore();
+      return this;
     },
-    binSplit: function(num){
+    /**
+     * 切分验证字符
+     */
+    binSplit: function(){
       var image = this.canvas, w = image.width, h = image.height,
         lettersPos = [], lettersData = [], start = 0, end = 0, pix, startY = h - 1, endY = 0,
         foundletter, inletter, _inletter,
@@ -123,7 +133,7 @@ var blade = function(){
     var p = Math.pow;
     return p((p(r, 2.2)*.2973 + p(g, 2.2)*.6274 + p(b, 2.2)*.0753), 1/2.2);
   };
-  return function(img){ return new fn(img) };
+  return fn;
 }();
 
 var dataTocanvas = function(imgdata){
@@ -161,15 +171,14 @@ besmart = function(imgdata, trainset){
  */
 recognizer = function(img, trainset){
   var w = img.width, h = img.height, 
-    ctx = new Canvas(w, h).getContext('2d'), imageData, bl, result = [], imgs = [], detail = [];
+    canvas = new Canvas(w, h),
+    ctx = canvas.getContext('2d'), imageData, bl, result = [], imgs = [], detail = [];
   ctx.fillStyle = BG;
   ctx.fillRect(0, 0, w, h);
   ctx.drawImage(img, 0, 0);
   imageData = ctx.getImageData(0, 0, w, h);
-  bl = blade(img);
-  
-  bl.transform(1, 0, .38, 1, 0, 0);
-  bl.grey(160);
+  bl = (new Blade(canvas));
+  bl.transform.apply(bl, TRANSFORM_RATE).grey(GREY);
   
   bl.binSplit().forEach(function(imgData, i){
     var res = besmart(imgData, trainset);
@@ -203,7 +212,7 @@ var VectorCompare = (function(){
       return Math.sqrt(total)
     },
     /**
-     * 检测矢量相关率
+     * 计算矢量相关率
      * @return {Number} 相关率
      */
     relation: function(concordance1, concordance2){
