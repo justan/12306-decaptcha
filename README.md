@@ -1,9 +1,41 @@
-#时过境迁的目标:#
-  *12306-decaptcha*尝试对[中国铁路客户服务系统](https://dynamic.12306.cn/otsweb/) 的登录验证码 ![12306验证码](https://dynamic.12306.cn/otsweb/passCodeAction.do?rand=lrand "") 进行识别. 
+#12306-decaptcha
+
+##时过境迁的目标:
+
+  *12306-decaptcha* 尝试对[中国铁路客户服务系统](https://dynamic.12306.cn/otsweb/) 的登录验证码 ![12306验证码](https://dynamic.12306.cn/otsweb/passCodeAction.do?rand=lrand "") 进行识别. 
 
   可运行在 *browser / node* 环境中
   
-#License#
+##Usage:
+
+In browser: 
+  
+```javascript
+<script type="text/javascript" src="https://raw.github.com/justan/12306-decaptcha/master/lib/decaptcha12306.js"></script>
+<img id="passcode" src="https://dynamic.12306.cn/otsweb/passCodeAction.do?rand=lrand" />
+<script type="text/javascript">
+  var img = $("#passcode")[0];
+  img.onload = function(){
+    $.get('https://raw.github.com/justan/12306-decaptcha/master/imageset.json', function(imgset){//download the imageset.json to yourself server
+      var result =  decaptcha.recognizer(img, imgset);
+      alert(result.result);
+    });
+  }
+</script>
+```
+  
+In Node.js: 
+  
+```javascript
+var Canvas = require('canvas'), Image = Canvas.Image, decaptcha = require('./12306-decaptcha');
+var img = new Image;
+img.src = "https://dynamic.12306.cn/otsweb/passCodeAction.do?rand=lrand";
+var imgset = JSON.parse(fs.readFileSync('imageset.json', 'utf8'));
+var result = decaptcha.recognizer(img, imgset);
+console.log(result.result);
+```
+  
+##License
 
 (The MIT License)
 
