@@ -6,7 +6,7 @@ var imageset = {},
     'h','j','k','m','n','o','p','q','r','s','t','u','v','w','x','y','z'];
   
 (function(){
-  fs.open('imageset.v', 'r+', function(err, f){
+  fs.open('../imageset.json', 'r+', function(err, f){
     if(err){
       next(err);
     }else{

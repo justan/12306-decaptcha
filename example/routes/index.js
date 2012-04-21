@@ -1,10 +1,6 @@
 var https = require('https'),
-  http = require('http'),
-  w = require('winston');
+  http = require('http');
   
-//w.setLevels(w.config.npm.levels);
-//w.addColors(w.config.npm.colors);
-w.add(w.transports.File, { filename: 'logs/w.log' });
 /*
  * GET home page.
  */
@@ -22,7 +18,6 @@ module.exports = {
     var retry_num = 0, cb = function(err, rs){
       var html = '';
       if(err){
-        w.warn(err);
         if(retry_num < MAX_AUTOLOGIN_RETRY && req.query.autoretry){
           retry(err);
         }else{
@@ -43,7 +38,6 @@ module.exports = {
             ret.login = true;
             ret.name = u_name[1];
             req.session.username = ret.name;
-            w.silly(ret.name + ', login')
           }else{
             ret.login = false;
             ret.code = -1;
@@ -60,14 +54,12 @@ module.exports = {
           }else{
             res.send(ret);
           }
-          ret.code == -1 && w.warn('unkonw html: ' + html);
         });
         //rs.pipe(res);
       }
     }, 
     retry = function(){
       retry_num++;
-      w.info('retry num: ' + retry_num);
       login(req, cb);
     };
     login(req, cb);
@@ -78,7 +70,6 @@ module.exports = {
       'Referer': 'https://dynamic.12306.cn/otsweb/loginAction.do?method=init',
       'Accept': 'image/png,image/*;q=0.8,*/*;q=0.5'
     }, cookie = cookie_12306(req);
-    w.silly(req.cookies);
     cookie && (headers['Cookie'] = cookie);
     
     var r = https.request({
@@ -89,30 +80,22 @@ module.exports = {
       headers: headers
     }, function(rs){
       var _jsessionid, _BIGipServerotsweb;
-      w.silly(rs.headers);
       rs.headers['set-cookie'] && rs.headers['set-cookie'].forEach(function(item){
-        w.info(item);
         var nr = /^(.+?)=/,
           name = item.match(nr)[1],
           val = item.replace(nr, '').replace(/;.*$/, '');
         name && res.cookie(name, val);
-        w.info('name: ' + name + ', val: ' + val);
       });
       res.header('Content-Type', 'image/jpeg');
       rs.pipe(res);
     });
     r.on('error', function(e){
-      w.warn(e);
       res.end(e, 503);
     });
     r.end();
-    w.silly(r.output);
   },
   check: function(req, res){
     res.send('lalala')
-  },
-  test: function(req, res){
-    w.silly(req.body);
   }
 };
 
@@ -141,11 +124,9 @@ var login = function(req, cb){
   });
   r.on('error', function(e){
     cb(e)
-    w.warn(e);
   });
   r.write(data);
-  r.end();
-  w.verbose(r.output);  
+  r.end(); 
 },
 cookie_12306 = function(req){
   var cookie;

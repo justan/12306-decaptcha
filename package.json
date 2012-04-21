@@ -1,13 +1,20 @@
 {
-    "name": "application-name"
-  , "version": "0.0.1"
-  , "private": true
-  , "dependencies": {
-      "express": "2.5.1"
-    , "jade": ">= 0.0.1"
-    , "stache": "*"
-    , "winston": ">= 0.2"
-    , "canvas": "*"
-    , "underscore": ">= 1.0"
+  "name": "12306decaptcha",
+  "version": "0.0.2",
+  "private": true,
+  "dependencies": {
+    "canvas": "*"
+  },
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "engines": {
+    "node": "*"
+  },
+  "author": "Justan",
+  "description": "decaptacha 12306.cn",
+  "homepage": "https://github.com/justan/12306-decaptcha",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/justan/12306-decaptcha.git"
   }
 }

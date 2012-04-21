@@ -39,7 +39,7 @@ $(function(){
     });
     return false;
   }
-  if(!window.__ISLOGIN__){
+  if(!window.__ISLOGIN__ && document.login_form){
     document.login_form.onsubmit = login;
   }
 })

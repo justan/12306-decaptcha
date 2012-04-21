@@ -1,0 +1,10 @@
+<div>原始验证码: <img src="{{originImage}}" />
+<button onclick="javascript:location.reload();">换一组</button>
+</div>
+<div>验证结果: {{result}}</div>
+<div>分解详情: </div>
+<ul>
+{{#imgData}}
+<li><img src="{{.}}" /></li>
+{{/imgData}}
+</ul>

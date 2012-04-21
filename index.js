@@ -1,0 +1,1 @@
+module.exports = require('./lib/decaptcha12306.js');
