@@ -6,7 +6,7 @@
 
   可运行在 *browser / node* 环境中
   
-##Usage:
+##用法(伪代码):
 
 In browser: 
   
@@ -34,6 +34,11 @@ var imgset = JSON.parse(fs.readFileSync('imageset.json', 'utf8'));
 var result = decaptcha.recognizer(img, imgset);
 console.log(result.result);
 ```
+
+GM示例:
+
+安装[示例用户脚本](https://raw.github.com/justan/12306-decaptcha/master/12306-decaptcha.user.js)后, 访问[12306登录页面](https://dynamic.12306.cn/otsweb/)即可看到效果.
+
   
 ##License
 
