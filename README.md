@@ -37,7 +37,7 @@ console.log(result.result);
 
 GM示例:
 
-安装[示例用户脚本](https://raw.github.com/justan/12306-decaptcha/master/12306-decaptcha.user.js)后, 访问[12306登录页面](https://dynamic.12306.cn/otsweb/)即可看到效果.
+安装[示例用户脚本](https://raw.github.com/justan/12306-decaptcha/master/example/12306-decaptcha.user.js)后, 访问[12306登录页面](https://dynamic.12306.cn/otsweb/)即可看到效果.
 
   
 ##License
