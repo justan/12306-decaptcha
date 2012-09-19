@@ -3,7 +3,10 @@
 // @namespace   whosemind.net
 // @description 识别 12306.cn 的登录验证码
 // @include     https://dynamic.12306.cn/otsweb/loginAction.do*
-// @version     0.0.1
+// @require      https://raw.github.com/justan/12306-decaptcha/master/lib/decaptcha12306.js
+// @grant       GM_log
+// @grant       GM_xmlhttpRequest
+// @version     0.0.2
 // ==/UserScript==
 
 var $ = unsafeWindow.$
@@ -14,13 +17,12 @@ var $ = unsafeWindow.$
  }
  , xhr = GM_xmlhttpRequest;
 
-var src = 'https://raw.github.com/justan/12306-decaptcha/master/lib/decaptcha12306.js'
- , imgsetUrl = 'https://raw.github.com/justan/12306-decaptcha/master/imageset.json'
+var imgsetUrl = 'https://raw.github.com/justan/12306-decaptcha/master/imageset.json'
  , ranId = 'img_rrand_code';
 
 
-log('init.');
-function onload(){
+log('init..');
+(function onload(){
   log('loading imageset..');
   GM_xmlhttpRequest({
     method: 'GET',
@@ -35,10 +37,9 @@ function onload(){
       log('xhr error: ' + JSON.stringify(e));
     }
   });
-}
+})()
 
 function dosth(img, imgset){
-  var decaptcha = unsafeWindow.decaptcha;
   var result = decaptcha.recognizer(img, imgset).result.join('');
   log(result);
   
@@ -47,8 +48,3 @@ function dosth(img, imgset){
     dosth(img, imgset);
   };
 }
-
-var script = document.createElement('script');
-script.src = src;
-script.onload = onload;
-document.body.appendChild(script);
