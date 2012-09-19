@@ -31,6 +31,9 @@ log('init..');
     onload: function(data){
       var imgset = JSON.parse(data.responseText);
       var img = document.getElementById(ranId);
+      img.onload = function(){
+        dosth(img, imgset);
+      };
       dosth(img, imgset);
     },
     onerror: function(e){
@@ -41,10 +44,16 @@ log('init..');
 
 function dosth(img, imgset){
   var result = decaptcha.recognizer(img, imgset).result.join('');
-  log(result);
+  var title;
   
-  input.title = img.title = '识别结果: ' + result + '点击验证码重试'
-  img.onload = function(){
-    dosth(img, imgset);
-  };
+  log(result);
+  if(result.length !== 4){
+    setTimeout(function(){
+      img.src = img.src.replace(/(&[\d\.]*)?$/, '&' + Math.random());
+    }, 1000);
+    title = '识别错误, 重试中'
+  }else{
+    title = '识别结果: ' + result + ' 点击验证码重试';
+  }
+  input.title = img.title = title;
 }
